@@ -107,33 +107,64 @@ function bind(){
   document.addEventListener('click',e=>{let d=e.target.closest('[data-day]'),s=e.target.closest('[data-site]'),j=e.target.closest('[data-target]');if(d)$('#'+d.dataset.day)?.scrollIntoView({behavior:'smooth'});if(s){e.preventDefault();$('[data-tab="sites"]').click();let id=s.dataset.site,isOfficial=id.startsWith('official-');setTimeout(()=>{if(isOfficial)$('#officialFold').open=true;else $('#generalFold').open=true;$('#'+id)?.scrollIntoView({behavior:'smooth'})},80)}if(j){e.preventDefault();$('[data-tab="sites"]').click();setTimeout(()=>{let fold=$('#'+j.dataset.open);if(fold)fold.open=true;$('#'+j.dataset.target)?.scrollIntoView({behavior:'smooth'})},80)}});
 }
 
+const MOBILE_PROMPT_URL='https://angchenwu.github.io/HokkaidoV2_Mobile/';
+const MOBILE_PROMPT_KEY='hokkaidoMobilePromptDismissed_v2';
+function isMobileLikeBrowser(){
+  const ua=navigator.userAgent||navigator.vendor||'';
+  const isLine=/Line\//i.test(ua)||/NAVER\(inapp/i.test(ua);
+  const isIOS=/iPhone|iPad|iPod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const isAndroid=/Android/i.test(ua);
+  const isMobileUA=/Mobile|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua)||isIOS||isAndroid;
+  const vw=Math.min(
+    window.innerWidth||9999,
+    window.visualViewport?.width||9999,
+    window.screen?.width||9999
+  );
+  const isSmallViewport=vw<=820;
+  const isTouchLike=(window.matchMedia&&(
+    window.matchMedia('(pointer: coarse)').matches||
+    window.matchMedia('(hover: none)').matches
+  ))||navigator.maxTouchPoints>0;
+  return isMobileUA||isSmallViewport||(isLine&&isTouchLike);
+}
+function isAlreadyMobilePage(){
+  const target=new URL(MOBILE_PROMPT_URL,location.href);
+  const currentPath=location.pathname.replace(/\/+$/,'');
+  const targetPath=target.pathname.replace(/\/+$/,'');
+  return currentPath===targetPath || location.href.replace(/\/+$/,'/')===target.href.replace(/\/+$/,'/');
+}
 function mobilePrompt(){
-  const mobileUrl='https://angchenwu.github.io/HokkaidoV2_Mobile/';
-  const isMobileWidth=window.matchMedia&&window.matchMedia('(max-width: 760px)').matches;
-  const isMobileUA=/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent||'');
-  const isAlreadyMobile=/\/HokkaidoV2_Mobile\/?$/i.test(location.pathname)||location.href.startsWith(mobileUrl);
-  const hasPrompt=document.querySelector('.mobilePromptBackdrop');
-  if(!(isMobileWidth||isMobileUA)||isAlreadyMobile||sessionStorage.getItem('hokkaidoMobilePromptDismissed')==='1'||hasPrompt)return;
+  if(document.querySelector('.mobilePromptBackdrop'))return;
+  if(isAlreadyMobilePage())return;
+  if(!isMobileLikeBrowser())return;
+  if(sessionStorage.getItem(MOBILE_PROMPT_KEY)==='1')return;
   const box=document.createElement('div');
   box.className='mobilePromptBackdrop';
   box.setAttribute('role','dialog');
   box.setAttribute('aria-modal','true');
   box.setAttribute('aria-label','前往手機板網頁提示');
   box.innerHTML=`<div class="mobilePromptBox"><span class="mobilePromptBadge">📱 偵測到手機瀏覽</span><div class="mobilePromptTitle">是否前往手機板網頁？</div><p class="mobilePromptText">手機板已針對小螢幕調整字級、卡片寬度與閱讀動線，較適合長官以手機快速查看行程。</p><div class="mobilePromptActions"><button type="button" class="mobilePromptGo" data-mobile-go>前往手機板</button><button type="button" class="mobilePromptStay" data-mobile-stay>留在目前版本</button></div></div>`;
-  const close=()=>{sessionStorage.setItem('hokkaidoMobilePromptDismissed','1');box.remove()};
+  const close=()=>{sessionStorage.setItem(MOBILE_PROMPT_KEY,'1');box.remove()};
   box.addEventListener('click',e=>{if(e.target===box)close()});
-  box.querySelector('[data-mobile-go]').onclick=()=>{location.href=mobileUrl};
+  box.querySelector('[data-mobile-go]').onclick=()=>{location.assign(MOBILE_PROMPT_URL)};
   box.querySelector('[data-mobile-stay]').onclick=close;
   document.body.appendChild(box);
 }
-function watchMobilePrompt(){
-  const mq=window.matchMedia&&window.matchMedia('(max-width: 760px)');
-  if(!mq)return;
-  const fn=e=>{if(e.matches)mobilePrompt()};
-  if(mq.addEventListener)mq.addEventListener('change',fn);else if(mq.addListener)mq.addListener(fn);
+function initMobilePrompt(){
+  let tries=0;
+  const run=()=>{
+    tries+=1;
+    mobilePrompt();
+    if(tries<6&&!document.querySelector('.mobilePromptBackdrop'))setTimeout(run,250);
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});
+  else run();
+  window.addEventListener('load',run,{once:true});
+  window.addEventListener('pageshow',run);
+  window.addEventListener('resize',run);
 }
 
-shell();render();bind();mobilePrompt();watchMobilePrompt();
+shell();render();bind();initMobilePrompt();
 })();
 </script>
 </body>
