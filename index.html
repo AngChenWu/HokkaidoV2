@@ -35,6 +35,37 @@
 @media(min-width:761px){.mobilePromptBackdrop{display:none}}
 @media(max-width:420px){.mobilePromptBackdrop{padding:12px}.mobilePromptBox{border-radius:22px;padding:18px}.mobilePromptActions{grid-template-columns:1fr}.mobilePromptTitle{font-size:20px}.mobilePromptText{font-size:14px}}
 
+
+/* === FIX: meal split blocks should use the same warm-yellow palette as meal cards === */
+.item.split.mealSplit{
+  background:linear-gradient(135deg,#fffaf2,var(--mBg));
+  border-color:rgba(190,114,34,.28);
+  border-left:6px solid var(--meal);
+}
+.item.split.mealSplit .itag,
+.item.split.mealSplit .pill,
+.item.split.mealSplit .miniTag,
+.item.split.mealSplit .splitTag{
+  background:rgba(190,114,34,.14);
+  color:var(--meal);
+}
+.item.split.mealSplit .place,
+.item.split.mealSplit .splitBox h4{
+  color:var(--meal);
+}
+.item.split.mealSplit .splitBox,
+.item.split.mealSplit .splitBox.leader,
+.item.split.mealSplit .splitBox.youth{
+  background:rgba(255,255,255,.82);
+  border-color:rgba(190,114,34,.22);
+  border-left:5px solid var(--meal);
+  box-shadow:none;
+}
+.item.split.mealSplit .splitBox .splitTag{
+  background:rgba(190,114,34,.14);
+  color:var(--meal);
+}
+
 </style>
 </head>
 <body><main id="app" class="page"></main>
